@@ -1,10 +1,8 @@
 // libraries to get from cache
 const cache = require('memory-cache');
-const redis = require('redis');
 
-// Setup redis client
-const REDIS_PORT = process.env.REDIS_PORT || 6379;
-const client = redis.createClient(REDIS_PORT);
+const axios = require('axios');
+const redisClient = require('../services/redisClient');
 
 const controller = {};
 
@@ -34,36 +32,39 @@ controller.getUser = async (req, res) => {
     }
 }
 
-// METHOD 2 - Redis-fetch: fetch user by id (uncomment to use)
+// METHOD 2 - REDIS: fetch user by id (uncomment this method to use it)
 // controller.getUser = async (req, res) => {
 //     try {
-//         const { id } = req.params;
-//         let json;
+//         const id = req.params.id; // Get the id from the request parameters
+//         let json; // Dynamic json to store the response
 
-//         // Check if data is in Redis cache
-//         client.get(id, async (err, result) => {
-//             if (err) throw err;
+//         try {
+//             // Check if data is in cache
+//             const cachedUser = await redisClient.get(id);
 
-//             if (result) {
+//             if (cachedUser) {
 //                 console.log('Getting info from Redis cache...');
-//                 json = JSON.parse(result);
+//                 json = JSON.parse(cachedUser);
 //             } else {
-//                 console.log('Fetching from https://jsonplaceholder.typicode.com/users/ since its the first time...');
-//                 const response = await fetch(`https://jsonplaceholder.typicode.com/users/${id}`);
-//                 json = await response.json();
+//                 console.log('Fetching from https://jsonplaceholder.typicode.com/users/ since is the first time....');
+//                 const response = await axios.get(`https://jsonplaceholder.typicode.com/users/${id}`);
+//                 json = response.data;
 
-//                 // Save data to Redis cache
-//                 client.setex(id, 3600, JSON.stringify(json));
+//                 // Save data to cache
+//                 await redisClient.set(id, JSON.stringify(json), {
+//                     EX: 3600, // Cache for 1 hour
+//                 });
 //             }
 
-//             console.log(json);
 //             res.status(200).send(json);
-//         });
-        
+//         } catch (error) {
+//             console.log(error);
+//             res.status(500).send('Internal Server Error');
+//         }
 //     } catch (error) {
 //         console.log(error);
 //         res.status(500).send('Internal Server Error');
 //     }
-// }
+// };
 
 module.exports = controller;

@@ -9,7 +9,7 @@ router.get('/', (req, res) => {
     res.status(501).send('NOT IMPLEMENTED: sevice currently unavailable');
 });
 
-// Get user by id
+// // Get user by id
 router.get('/:id', controller.getUser);
 
 module.exports = router;
